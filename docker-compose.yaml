@@ -1,0 +1,22 @@
+version: "1.0"
+
+services:
+  postgres:
+    container_name: oficina-ufca-pg
+    image: postgres:16
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=adm123
+      - POSTGRES_DB=oficina-db
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+
+  ollama:
+    container_name: ollama
+    image: ollama/ollama:latest
+    restart: always
+    ports:
+      - "11434:11434"
