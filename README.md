@@ -27,6 +27,9 @@ Baixe o Python 3.10+ no site oficial:
 
 🔗 [https://www.python.org/downloads/](https://www.python.org/downloads/)
 
+Dependencias:
+    - pip install langchain_ollama
+    - pip install sqlalchemy
 ---
 
 ## 🛢️ 4. Instalar o DBeaver
@@ -37,6 +40,8 @@ Baixe a versão Community no site oficial:
 
 Com isso você poderá se conectar ao banco PostgreSQL criado pelo Docker.
 
+## Importar CSV para tabela PostgreSQL - Dbeaver
+> amazon-csv.csv
 ---
 
 ## ▶️ 5. Rodando o ambiente
