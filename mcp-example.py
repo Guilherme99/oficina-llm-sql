@@ -2,6 +2,7 @@ import json
 from langchain_ollama import ChatOllama
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import SQLAlchemyError
+from decimal import Decimal
 
 # --- 1. LLM usando Ollama ---
 class OllamaSQLGenerator:
@@ -29,51 +30,50 @@ RETORNE APENAS O SQL PURO. SEM TEXTOS ACRESCENTES.
         return response.content.strip()
 
 
-# --- 2. Executor SQL com SQLAlchemy ---
+
 class SQLAlchemyExecutor:
     def __init__(self, database_url: str):
-        """
-        database_url exemplos:
-        - SQLite: "sqlite:///seu_banco.db"
-        - PostgreSQL: "postgresql://user:password@localhost:5432/database"
-        - MySQL: "mysql+pymysql://user:password@localhost:3306/database"
-        """
         self.engine = create_engine(database_url)
 
+    def convert_value(self, value):
+        if isinstance(value, Decimal):
+            return float(value)
+        return value
+
     def query(self, sql: str):
-        """Executa a query SQL e retorna os resultados"""
         try:
             with self.engine.connect() as connection:
                 result = connection.execute(text(sql))
-                
-                # Se for SELECT, retorna os dados
+
                 if sql.strip().upper().startswith("SELECT"):
-                    # Pega os nomes das colunas
                     columns = list(result.keys())
-                    
-                    # Converte as linhas para lista de dicionários
-                    rows = [dict(zip(columns, row)) for row in result.fetchall()]
-                    
+
+                    rows = [
+                        {col: self.convert_value(val) for col, val in zip(columns, row)}
+                        for row in result.fetchall()
+                    ]
+
                     return {
                         "success": True,
                         "columns": columns,
                         "rows": rows,
                         "count": len(rows)
                     }
+
                 else:
-                    # Para INSERT/UPDATE/DELETE
                     connection.commit()
                     return {
                         "success": True,
                         "affected_rows": result.rowcount
                     }
-                    
+
         except SQLAlchemyError as e:
             return {
                 "success": False,
                 "error": str(e),
                 "error_type": type(e).__name__
             }
+
 
 
 # --- 3. Loop interativo ---
@@ -88,7 +88,7 @@ def main():
 
     while True:
         try:
-            question = input("\nPergunta (EN): ")
+            question = input("\nPergunta (EN/PT): ")
             
             # Gera o SQL usando Ollama
             sql = sql_generator.generate_sql(question)
